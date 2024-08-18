@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Take a picture</h2>
+
+<button onclick="takePicture()">Take Picture</button>
+
+<script>
+function takePicture() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0);
+
+        stream.getTracks().forEach(track => track.stop());
+
+        canvas.toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append('file', blob, 'picture.jpg');
+
+            fetch('http://10.87.143.109:5001/upload', {  // Use your Termux IP here with the new port
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => alert('Picture sent successfully!'))
+            .catch(error => alert('Error sending picture: ' + error));
+        }, 'image/jpeg');
+    })
+    .catch(function(err) {
+        alert('Error accessing camera: ' + err);
+    });
+}
+</script>
+
+</body>
+</html>
